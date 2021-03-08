@@ -1,25 +1,63 @@
-#include <new>
+#include <algorithm>
+#include "Geometry.h"
 
-#include "GL.h"
 
-float* createCube(float size)
+Cube::Cube(float size)
 {
-	float* cube = new float[] {
-	//  Position            Color             Texcoords
-        -0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Top-left
-         0.5f,  0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Top-right
-         0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // Bottom-right
-        -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // Bottom-left
 
-        -0.5f,  0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Top-left
-         0.5f,  0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Top-right
-         0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // Bottom-right
-        -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // Bottom-left
-	};
-	for (int i = 0; i < 3; i++) {
-		for (int j = 0; j < 8; j++) {
-			cube[j * 8 + i] *= size;
-		}
-	}
-	return cube;
+	pVertices = std::vector<float>({
+		//  Position      // Normal
+        -0.5, -0.5,  0.5,  0,  0,  1,
+         0.5, -0.5,  0.5,  0,  0,  1,
+        -0.5,  0.5,  0.5,  0,  0,  1,
+         0.5,  0.5,  0.5,  0,  0,  1,
+
+        -0.5,  0.5,  0.5,  0,  1,  0, 
+         0.5,  0.5,  0.5,  0,  1,  0,
+        -0.5,  0.5, -0.5,  0,  1,  0,
+         0.5,  0.5, -0.5,  0,  1,  0,
+
+        -0.5,  0.5, -0.5,  0,  0, -1,
+         0.5,  0.5, -0.5,  0,  0, -1,
+        -0.5, -0.5, -0.5,  0,  0, -1,
+         0.5, -0.5, -0.5,  0,  0, -1,
+
+        -0.5, -0.5, -0.5,  0, -1,  0,
+         0.5, -0.5, -0.5,  0, -1,  0,
+        -0.5, -0.5,  0.5,  0, -1,  0,
+         0.5, -0.5,  0.5,  0, -1,  0,
+
+         0.5, -0.5,  0.5,  1,  0,  0,
+         0.5, -0.5, -0.5,  1,  0,  0,
+         0.5,  0.5,  0.5,  1,  0,  0,
+         0.5,  0.5, -0.5,  1,  0,  0,
+
+        -0.5, -0.5, -0.5, -1,  0,  0,
+        -0.5, -0.5,  0.5, -1,  0,  0,
+        -0.5,  0.5, -0.5, -1,  0,  0,
+        -0.5,  0.5,  0.5, -1,  0,  0,
+	});
+	offsetVertices = std::vector<float>({
+		 // Offsets
+		 1.0f, 0.0f, 0.0f,  // Front Left 
+		-1.0f, 0.0f, 0.0f,  // Front Right
+         1.0f, 0.0f, 2.0f,  // Back Left 
+        -1.0f, 0.0f, 2.0f,  // Back Right
+	});
+    colorVertices = std::vector<float>({
+        // Colors
+        1.0f, 0.0f, 0.0f, // Red
+        0.0f, 0.0f, 1.0f, // Blue
+        0.0f, 1.0f, 0.0f, // Green
+        1.0f, 0.0f, 1.0f, // Purple
+    });
+	elements = std::vector<GLuint>({
+         0,  1,  2,  2,  1,  3,
+         4,  5,  6,  6,  5,  7,
+         8,  9, 10, 10,  9, 11,
+        12, 13, 14, 14, 13, 15,
+        16, 17, 18, 18, 17, 19,
+        20, 21, 22, 22, 21, 23,
+	});
+	std::transform(pVertices.begin(), pVertices.end(), pVertices.begin(), [&size](auto& c) {return c * size;});
 }

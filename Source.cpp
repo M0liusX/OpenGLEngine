@@ -7,16 +7,10 @@
 #include <vector>
 
 #include "GL.h"
+#include "Geometry.h"
 
 /* TEMP GLOBALS */
-float* vertices = createCube(1.0f);
-
-GLuint elements[] = {
-	0, 1, 2,
-	2, 3, 0,
-	4, 5, 6,
-	6, 7, 4
-};
+Cube a = Cube(1.0f);
 
 // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
 glm::mat4 Projection = glm::perspective(glm::radians(45.0f), (float)800 / (float)600, 0.1f, 100.0f);
@@ -72,6 +66,12 @@ main() {
 
 	/* GL SETTINGS */
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_TEXTURE_2D);
+	glEnable(GL_CULL_FACE);
+
+	/* Initialize Program */
+	GLuint shaderProgram = LoadShader("shaders/default.vert", "shaders/default.frag");
+	glUseProgram(shaderProgram);
 
 	GLuint vao;
 	glGenVertexArrays(1, &vao);
@@ -80,12 +80,50 @@ main() {
 	GLuint vbo;
 	glGenBuffers(1, &vbo); // Generate 1 buffer
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float)*64, vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float)* a.pVertices.size(), a.pVertices.data(), GL_STATIC_DRAW);
+
+	GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
+	glEnableVertexAttribArray(posAttrib);
+	glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE,
+		6 * sizeof(float), 0);
+
+	GLint normAttrib = glGetAttribLocation(shaderProgram, "normal");
+	glEnableVertexAttribArray(normAttrib);
+	glVertexAttribPointer(normAttrib, 3, GL_FLOAT, GL_FALSE,
+		6 * sizeof(float), (void*)(3 * sizeof(float)));
+
+	GLuint vboo;
+	glGenBuffers(1, &vboo); // Generate 1 buffer
+	glBindBuffer(GL_ARRAY_BUFFER, vboo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * a.offsetVertices.size(), a.offsetVertices.data(), GL_STATIC_DRAW);
+
+	GLint offAttrib = glGetAttribLocation(shaderProgram, "offset");
+	glEnableVertexAttribArray(offAttrib);
+	glVertexAttribPointer(offAttrib, 3, GL_FLOAT, GL_FALSE,
+		3 * sizeof(float), 0);
+	glVertexAttribDivisor(offAttrib, 1);
+
+	GLuint vboc;
+	glGenBuffers(1, &vboc); // Generate 1 buffer
+	glBindBuffer(GL_ARRAY_BUFFER, vboc);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * a.colorVertices.size(), a.colorVertices.data(), GL_STATIC_DRAW);
+	GLint colAttrib = glGetAttribLocation(shaderProgram, "color");
+	glEnableVertexAttribArray(colAttrib);
+	glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE,
+		3 * sizeof(float), 0);
+	glVertexAttribDivisor(colAttrib, 1);
+
+	//GLint texAttrib = glGetAttribLocation(shaderProgram, "texcoord");
+	//glEnableVertexAttribArray(texAttrib);
+	//glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE,
+	//	8 * sizeof(float), (void*)(6 * sizeof(float)));
+	//glVertexAttribDivisor(texAttrib, 2);
 
 	GLuint ebo;
 	glGenBuffers(1, &ebo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)* a.elements.size(), a.elements.data(), GL_STATIC_DRAW);
 
 	// Texture
 	GLuint tex;
@@ -98,28 +136,10 @@ main() {
 	float color[] = { 1.0f, 0.0f, 0.0f, 1.0f };
 	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color);
 	int width, height;
-	unsigned char* image = SOIL_load_image("images/cat.jpg", &width, &height, 0, SOIL_LOAD_RGB);
+	unsigned char* image = SOIL_load_image("images/cat.jpg", &width, &height, 0, SOIL_LOAD_RGB); 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	SOIL_free_image_data(image);
-
-	GLuint shaderProgram = LoadShader("shaders/default.vert", "shaders/default.frag");
-	glUseProgram(shaderProgram);
-
-	GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
-	glEnableVertexAttribArray(posAttrib);
-	glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE,
-		8 * sizeof(float), 0);
-
-	GLint colAttrib = glGetAttribLocation(shaderProgram, "color");
-	glEnableVertexAttribArray(colAttrib);
-	glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE,
-		8 * sizeof(float), (void*)(3 * sizeof(float)));
-
-	GLint texAttrib = glGetAttribLocation(shaderProgram, "texcoord");
-	glEnableVertexAttribArray(texAttrib);
-	glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE,
-		8 * sizeof(float), (void*)(6 * sizeof(float)));
 
 	// Get a handle for our "MVP" uniform
 	// Only during the initialisation
@@ -145,7 +165,8 @@ main() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
 		//glDrawArrays(GL_TRIANGLES, 0, 3);
-		glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
+		//glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
+		glDrawElementsInstanced(GL_TRIANGLES, a.elements.size(), GL_UNSIGNED_INT, 0, 4);
 
 		/* SWAP */
 		glfwSwapBuffers(window);
@@ -174,6 +195,7 @@ update(float delta)
 		cameraUp  // Head is up (set to 0,-1,0 to look upside-down)
 	);
 }
+
 
 void
 fallbackCameraKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)

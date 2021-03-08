@@ -25,7 +25,3 @@ fallbackMouseCallback(GLFWwindow* window,
 	                  double xpos,
 	                  double ypos);
 void update(float delta);
-
-// Geometry
-float*
-createCube(float size);

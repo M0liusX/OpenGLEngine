@@ -12,12 +12,15 @@
     <Filter Include="Shaders">
       <UniqueIdentifier>{17295946-6bc2-4c62-8a84-2577dec90bf9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Images">
-      <UniqueIdentifier>{dc577016-0bf0-4bd1-8186-34657fdd5ec5}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Images">
+      <UniqueIdentifier>{dc577016-0bf0-4bd1-8186-34657fdd5ec5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Markup">
+      <UniqueIdentifier>{0e3227ff-7717-4742-ac45-4ede09600296}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -35,12 +38,21 @@
     <ClInclude Include="GL.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Geometry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\default.frag">
       <Filter>Shaders</Filter>
     </None>
     <None Include="shaders\default.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="README.md">
+      <Filter>Markup</Filter>
+    </None>
+    <None Include="shaders\brick.frag">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

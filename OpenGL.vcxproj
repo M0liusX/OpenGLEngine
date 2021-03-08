@@ -170,9 +170,12 @@
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Geometry.h" />
     <ClInclude Include="GL.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="README.md" />
+    <None Include="shaders\brick.frag" />
     <None Include="shaders\default.frag" />
     <None Include="shaders\default.vert" />
   </ItemGroup>
