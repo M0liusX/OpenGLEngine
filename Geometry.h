@@ -1,7 +1,10 @@
-#pragma once
+#ifndef GEOMETRY_H
+#define GEOMETRY_H
 
 #include <vector>
+
 #include "GL.h"
+
 
 class Cube {
 public:
@@ -11,3 +14,6 @@ public:
 	std::vector<GLuint> elements; // vertice indices
 	Cube(float size);
 };
+
+
+#endif

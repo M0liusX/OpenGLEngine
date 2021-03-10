@@ -8,6 +8,9 @@
 
 #include "GL.h"
 #include "Geometry.h"
+#include "Model.h"
+#include "Shader.h"
+
 
 /* TEMP GLOBALS */
 Cube a = Cube(1.0f);
@@ -23,8 +26,8 @@ auto t_end = std::chrono::high_resolution_clock::now();
 std::vector<bool> buttons(6);
 
 // Camera matrix
-float cameraSpeed = 2.0f;
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, -2.0f);
+float cameraSpeed = 20.0f;
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, -20.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, 1.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 glm::mat4 View = glm::lookAt(
@@ -70,9 +73,10 @@ main() {
 	glEnable(GL_CULL_FACE);
 
 	/* Initialize Program */
-	GLuint shaderProgram = LoadShader("shaders/default.vert", "shaders/default.frag");
-	glUseProgram(shaderProgram);
+	Shader program = Shader("shaders/default.vert", "shaders/default.frag");
+	program.use();
 
+	/* Initialize Cubes */
 	GLuint vao;
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
@@ -82,12 +86,12 @@ main() {
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float)* a.pVertices.size(), a.pVertices.data(), GL_STATIC_DRAW);
 
-	GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
+	GLint posAttrib = glGetAttribLocation(program.ID, "position");
 	glEnableVertexAttribArray(posAttrib);
 	glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE,
 		6 * sizeof(float), 0);
 
-	GLint normAttrib = glGetAttribLocation(shaderProgram, "normal");
+	GLint normAttrib = glGetAttribLocation(program.ID, "normal");
 	glEnableVertexAttribArray(normAttrib);
 	glVertexAttribPointer(normAttrib, 3, GL_FLOAT, GL_FALSE,
 		6 * sizeof(float), (void*)(3 * sizeof(float)));
@@ -97,7 +101,7 @@ main() {
 	glBindBuffer(GL_ARRAY_BUFFER, vboo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * a.offsetVertices.size(), a.offsetVertices.data(), GL_STATIC_DRAW);
 
-	GLint offAttrib = glGetAttribLocation(shaderProgram, "offset");
+	GLint offAttrib = glGetAttribLocation(program.ID, "offset");
 	glEnableVertexAttribArray(offAttrib);
 	glVertexAttribPointer(offAttrib, 3, GL_FLOAT, GL_FALSE,
 		3 * sizeof(float), 0);
@@ -108,7 +112,7 @@ main() {
 	glBindBuffer(GL_ARRAY_BUFFER, vboc);
 
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * a.colorVertices.size(), a.colorVertices.data(), GL_STATIC_DRAW);
-	GLint colAttrib = glGetAttribLocation(shaderProgram, "color");
+	GLint colAttrib = glGetAttribLocation(program.ID, "color");
 	glEnableVertexAttribArray(colAttrib);
 	glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE,
 		3 * sizeof(float), 0);
@@ -143,8 +147,17 @@ main() {
 
 	// Get a handle for our "MVP" uniform
 	// Only during the initialisation
-	GLuint MatrixID = glGetUniformLocation(shaderProgram, "MVP");
+	GLuint MatrixID = glGetUniformLocation(program.ID, "MVP");
 
+	/* Initialize DK */
+	Engine::Model DK = Engine::Model("models/dk/donkey kong.obj");
+	Transformation dkt = { cameraPos + cameraFront, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.1) };
+	DK.CreateInstance(dkt);
+	Engine::Model Banana = Engine::Model("models/Golden Bananas/goldbananas.obj");
+	Banana.CreateInstance({ glm::vec3(0.0,0.0,0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.1) });
+	Banana.CreateInstance({ glm::vec3(0.0,0.0,0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.1) });
+	Engine::Model Scene = Engine::Model("models/Whack-a-Plant/frame_29.08.2014_13.12.07.obj");
+	Scene.CreateInstance({ glm::vec3(0.0,0.0,0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(1.0) });
 	while (!glfwWindowShouldClose(window))
 	{
 		/* POLL EVENTS */
@@ -158,6 +171,8 @@ main() {
 		float delta = std::chrono::duration_cast<std::chrono::duration<float>>(t_end - t_start).count();
 		t_start = std::chrono::high_resolution_clock::now();
 		update(delta);
+		dkt.Position = cameraPos + cameraFront * 5.0f;
+		DK.UpdateInstance(dkt, 0);
 		mvp = Projection * View * Model; // Remember, matrix multiplication is the other way around
 
 		/* RENDER */
@@ -166,7 +181,10 @@ main() {
 		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
 		//glDrawArrays(GL_TRIANGLES, 0, 3);
 		//glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
-		glDrawElementsInstanced(GL_TRIANGLES, a.elements.size(), GL_UNSIGNED_INT, 0, 4);
+		//glDrawElementsInstanced(GL_TRIANGLES, a.elements.size(), GL_UNSIGNED_INT, 0, 4);
+		DK.Draw(program);
+		Banana.Draw(program);
+		Scene.Draw(program);
 
 		/* SWAP */
 		glfwSwapBuffers(window);
